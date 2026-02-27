@@ -1,7 +1,6 @@
 package com.ekinum.backend.controllers;
 
-import com.ekinum.backend.dtos.ApiMessageResponse;
-import com.ekinum.backend.dtos.SignupRequest;
+import com.ekinum.backend.dtos.*;
 import com.ekinum.backend.services.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -31,5 +30,10 @@ public class AuthController {
         return ResponseEntity.ok(new ApiMessageResponse(
                 "Email verified successfully! You can now log in."
         ));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        return ResponseEntity.ok(authService.login(request));
     }
 }
