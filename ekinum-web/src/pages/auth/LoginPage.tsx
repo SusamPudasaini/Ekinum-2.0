@@ -1,12 +1,18 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import api from "../../api/axios";
-import AuthShell from "../../components/auth/AuthShell";
-import AuthField from "../../components/auth/AuthField";
-import { Link, useNavigate } from "react-router-dom";
-import { faEnvelope, faLock, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faUser,
+  faLock,
+  faEye,
+  faEyeSlash,
+} from "@fortawesome/free-solid-svg-icons";
+
+import { ShieldCheck } from "lucide-react";
 
 function isEmail(s: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());
@@ -18,11 +24,12 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
+  const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const errors = useMemo(() => {
     const e: Record<string, string> = {};
-    if (!email.trim()) e.email = "Email is required.";
+    if (!email.trim()) e.email = "Username is required.";
     else if (!isEmail(email)) e.email = "Enter a valid email.";
     if (!password) e.password = "Password is required.";
     return e;
@@ -46,12 +53,12 @@ export default function LoginPage() {
 
       if (!token) throw new Error("Missing token.");
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("me", JSON.stringify(res.data));
+      if (remember) {
+        localStorage.setItem("token", token);
+        localStorage.setItem("me", JSON.stringify(res.data));
+      }
 
       toast.success(`Welcome back! (${role})`);
-
-      // for now go home; later we’ll redirect based on role
       nav("/", { replace: true });
     } catch (err: any) {
       const msg =
@@ -65,35 +72,64 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthShell
-      title="Welcome back"
-      subtitle="Log in to manage purchases, view codes, and access your account securely."
-    >
-      <div className="mb-6">
-        <div className="text-2xl font-semibold tracking-tight">Log in</div>
-        <div className="mt-1 text-sm text-white/60">
-          New here?{" "}
-          <Link to="/signup" className="text-cyan-200 hover:text-cyan-100 underline underline-offset-4">
-            Create an account
-          </Link>
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 flex items-center justify-center px-4">
+      
+      {/* Decorative Circles */}
+      <div className="absolute right-20 top-20 h-10 w-10 rounded-full bg-yellow-400 opacity-90" />
+      <div className="absolute right-32 top-52 h-6 w-6 rounded-full bg-purple-900" />
+      <div className="absolute right-16 bottom-32 h-24 w-24 rounded-full bg-yellow-500 opacity-90" />
+      <div className="absolute right-10 bottom-10 h-32 w-32 rounded-full bg-purple-900 opacity-90" />
+
+      {/* Login Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="relative z-10 w-full max-w-md rounded-3xl bg-white p-10 shadow-[0_25px_70px_-20px_rgba(0,0,0,0.4)]"
+      >
+        {/* Logo */}
+        <div className="mb-6 flex justify-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-700 text-white shadow-md">
+            <ShieldCheck size={22} />
+          </div>
         </div>
-      </div>
 
-      <form onSubmit={onSubmit} className="space-y-4">
-        <AuthField
-          label="Email"
-          icon={faEnvelope}
-          value={email}
-          onChange={setEmail}
-          placeholder="you@example.com"
-          error={errors.email}
-          autoComplete="email"
-        />
+        {/* Title */}
+        <h1 className="text-center text-3xl font-extrabold text-purple-900">
+          Welcome Back
+        </h1>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-white/80">Password</label>
+        {/* Form */}
+        <form onSubmit={onSubmit} className="mt-8 space-y-6">
+          
+          {/* Username */}
           <div className="relative">
-            <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/45">
+            <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+              <FontAwesomeIcon icon={faUser} />
+            </div>
+
+            <input
+              type="text"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Username"
+              autoComplete="email"
+              className={[
+                "w-full rounded-full bg-gray-100 py-3 pl-12 pr-4 text-sm outline-none transition",
+                errors.email
+                  ? "ring-2 ring-red-300"
+                  : "focus:ring-2 focus:ring-purple-400",
+              ].join(" ")}
+            />
+
+            {errors.email && (
+              <p className="mt-2 text-xs text-red-500">{errors.email}</p>
+            )}
+          </div>
+
+          {/* Password */}
+          <div className="relative">
+            <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
               <FontAwesomeIcon icon={faLock} />
             </div>
 
@@ -101,55 +137,71 @@ export default function LoginPage() {
               type={showPass ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Your password"
+              placeholder="Password"
               autoComplete="current-password"
               className={[
-                "w-full rounded-2xl border bg-white/5 px-11 py-3 text-white outline-none transition",
-                "placeholder:text-white/35",
+                "w-full rounded-full bg-gray-100 py-3 pl-12 pr-10 text-sm outline-none transition",
                 errors.password
-                  ? "border-rose-400/60 ring-2 ring-rose-400/20"
-                  : "border-white/10 focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/15",
+                  ? "ring-2 ring-red-300"
+                  : "focus:ring-2 focus:ring-purple-400",
               ].join(" ")}
             />
 
             <button
               type="button"
               onClick={() => setShowPass((s) => !s)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl px-3 py-2 text-white/60 hover:text-white transition"
-              aria-label="Toggle password"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
               <FontAwesomeIcon icon={showPass ? faEyeSlash : faEye} />
             </button>
+
+            {errors.password && (
+              <p className="mt-2 text-xs text-red-500">{errors.password}</p>
+            )}
           </div>
-          {errors.password ? <div className="text-xs text-rose-300">{errors.password}</div> : null}
-        </div>
 
-        <motion.button
-          whileTap={{ scale: 0.98 }}
-          whileHover={{ y: -1 }}
-          type="submit"
-          disabled={!canSubmit}
-          className={[
-            "mt-2 w-full rounded-2xl px-4 py-3 font-semibold transition",
-            "bg-gradient-to-r from-cyan-400 to-fuchsia-500 text-slate-950",
-            "shadow-[0_18px_50px_-25px_rgba(34,211,238,0.55)]",
-            !canSubmit ? "opacity-60 cursor-not-allowed" : "hover:brightness-110",
-          ].join(" ")}
-        >
-          {loading ? "Signing in..." : "Log in"}
-        </motion.button>
+          {/* Remember / Forgot */}
+          <div className="flex items-center justify-between text-sm">
+            <label className="flex items-center gap-2 text-gray-600">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={() => setRemember((r) => !r)}
+                className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+              />
+              Remember Password
+            </label>
 
-        <div className="flex items-center justify-between text-sm text-white/60">
-          <span>Use your verified email.</span>
-          <button
-            type="button"
-            className="text-cyan-200 hover:text-cyan-100 underline underline-offset-4"
-            onClick={() => toast("Resend verification endpoint can be added next.")}
+            <Link
+              to="/forgot-password"
+              className="font-medium text-purple-700 hover:underline"
+            >
+              Forgot Password
+            </Link>
+          </div>
+
+          {/* Submit */}
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            type="submit"
+            disabled={!canSubmit}
+            className="w-full rounded-full bg-purple-800 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-purple-900 disabled:opacity-60"
           >
-            Resend verification
-          </button>
-        </div>
-      </form>
-    </AuthShell>
+            {loading ? "Signing in..." : "Login"}
+          </motion.button>
+
+          {/* Signup */}
+          <p className="text-center text-sm text-gray-600">
+            Don’t Have an Account?{" "}
+            <Link
+              to="/signup"
+              className="font-semibold text-purple-800 hover:underline"
+            >
+              Sign Up
+            </Link>
+          </p>
+        </form>
+      </motion.div>
+    </div>
   );
 }

@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import api from "../../api/axios";
-import AuthShell from "../../components/auth/AuthShell";
-import AuthField from "../../components/auth/AuthField";
-import { Link, useNavigate } from "react-router-dom";
+
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUser,
   faPhone,
@@ -13,7 +13,8 @@ import {
   faEye,
   faEyeSlash,
 } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
+import { ShieldCheck } from "lucide-react";
 
 function isEmail(s: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());
@@ -41,7 +42,8 @@ export default function SignupPage() {
     if (!password) e.password = "Password is required.";
     else if (password.length < 8) e.password = "Minimum 8 characters.";
     if (!confirmPassword) e.confirmPassword = "Confirm your password.";
-    else if (confirmPassword !== password) e.confirmPassword = "Passwords do not match.";
+    else if (confirmPassword !== password)
+      e.confirmPassword = "Passwords do not match.";
     return e;
   }, [fullName, phoneNumber, email, password, confirmPassword]);
 
@@ -56,7 +58,7 @@ export default function SignupPage() {
 
     try {
       setLoading(true);
-      const res = await api.post("/api/auth/signup", {
+      await api.post("/api/auth/signup", {
         fullName,
         phoneNumber,
         email,
@@ -64,7 +66,7 @@ export default function SignupPage() {
         confirmPassword,
       });
 
-      toast.success(res?.data?.message || "Signup successful. Verify your email.");
+      toast.success("Signup successful. Please verify your email.");
       nav("/login", { replace: true });
     } catch (err: any) {
       const msg =
@@ -78,144 +80,171 @@ export default function SignupPage() {
   }
 
   return (
-    <AuthShell
-      title="Create your Ekinum account"
-      subtitle="Join in seconds. Verify your email, then start selling or buying topups, gift cards, and subscriptions."
-    >
-      <div className="mb-6">
-        <div className="text-2xl font-semibold tracking-tight">Sign up</div>
-        <div className="mt-1 text-sm text-white/60">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 flex items-center justify-center px-4">
+      
+      {/* Decorative Circles */}
+      <div className="absolute right-20 top-20 h-10 w-10 rounded-full bg-yellow-400 opacity-90" />
+      <div className="absolute right-32 top-52 h-6 w-6 rounded-full bg-purple-900" />
+      <div className="absolute right-16 bottom-32 h-24 w-24 rounded-full bg-yellow-500 opacity-90" />
+      <div className="absolute right-10 bottom-10 h-32 w-32 rounded-full bg-purple-900 opacity-90" />
+
+      {/* Signup Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="relative z-10 w-full max-w-lg rounded-3xl bg-white p-10 shadow-[0_25px_70px_-20px_rgba(0,0,0,0.4)]"
+      >
+        {/* Logo */}
+        <div className="mb-6 flex justify-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-700 text-white shadow-md">
+            <ShieldCheck size={22} />
+          </div>
+        </div>
+
+        {/* Title */}
+        <h1 className="text-center text-3xl font-extrabold text-purple-900">
+          Create Account
+        </h1>
+
+        <p className="mt-2 text-center text-sm text-gray-500">
           Already have an account?{" "}
-          <Link to="/login" className="text-cyan-200 hover:text-cyan-100 underline underline-offset-4">
-            Log in
+          <Link
+            to="/login"
+            className="font-semibold text-purple-700 hover:underline"
+          >
+            Login
           </Link>
+        </p>
+
+        {/* Form */}
+        <form onSubmit={onSubmit} className="mt-8 space-y-5">
+          
+          {/* Full Name */}
+          <InputField
+            icon={faUser}
+            placeholder="Full Name"
+            value={fullName}
+            onChange={setFullName}
+            error={errors.fullName}
+          />
+
+          {/* Phone */}
+          <InputField
+            icon={faPhone}
+            placeholder="Phone Number"
+            value={phoneNumber}
+            onChange={setPhoneNumber}
+            error={errors.phoneNumber}
+          />
+
+          {/* Email */}
+          <InputField
+            icon={faEnvelope}
+            placeholder="Email Address"
+            value={email}
+            onChange={setEmail}
+            error={errors.email}
+          />
+
+          {/* Password */}
+          <PasswordField
+            icon={faLock}
+            placeholder="Password"
+            value={password}
+            onChange={setPassword}
+            show={showPass}
+            setShow={setShowPass}
+            error={errors.password}
+          />
+
+          {/* Confirm Password */}
+          <PasswordField
+            icon={faLock}
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            show={showPass2}
+            setShow={setShowPass2}
+            error={errors.confirmPassword}
+          />
+
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            type="submit"
+            disabled={!canSubmit}
+            className="w-full rounded-full bg-purple-800 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-purple-900 disabled:opacity-60"
+          >
+            {loading ? "Creating account..." : "Sign Up"}
+          </motion.button>
+
+          <p className="text-xs text-center text-gray-500">
+            By continuing, you agree to our Terms & Privacy Policy.
+          </p>
+        </form>
+      </motion.div>
+    </div>
+  );
+}
+
+/* Reusable Input */
+function InputField({ icon, placeholder, value, onChange, error }: any) {
+  return (
+    <div>
+      <div className="relative">
+        <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+          <FontAwesomeIcon icon={icon} />
         </div>
-      </div>
-
-      <form onSubmit={onSubmit} className="space-y-4">
-        <AuthField
-          label="Full name"
-          icon={faUser}
-          value={fullName}
-          onChange={setFullName}
-          placeholder="e.g., John Doe"
-          error={errors.fullName}
-          autoComplete="name"
-        />
-
-        <AuthField
-          label="Phone number"
-          icon={faPhone}
-          value={phoneNumber}
-          onChange={setPhoneNumber}
-          placeholder="e.g., +9779812345678"
-          error={errors.phoneNumber}
-          autoComplete="tel"
-        />
-
-        <AuthField
-          label="Email"
-          icon={faEnvelope}
-          value={email}
-          onChange={setEmail}
-          placeholder="you@example.com"
-          error={errors.email}
-          autoComplete="email"
-        />
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-white/80">Password</label>
-            <div className="relative">
-              <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/45">
-                <FontAwesomeIcon icon={faLock} />
-              </div>
-
-              <input
-                type={showPass ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Minimum 8 characters"
-                autoComplete="new-password"
-                className={[
-                  "w-full rounded-2xl border bg-white/5 px-11 py-3 text-white outline-none transition",
-                  "placeholder:text-white/35",
-                  errors.password
-                    ? "border-rose-400/60 ring-2 ring-rose-400/20"
-                    : "border-white/10 focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/15",
-                ].join(" ")}
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowPass((s) => !s)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl px-3 py-2 text-white/60 hover:text-white transition"
-                aria-label="Toggle password"
-                aria-pressed={showPass}
-              >
-                <FontAwesomeIcon icon={showPass ? faEyeSlash : faEye} />
-              </button>
-            </div>
-            {errors.password ? <div className="text-xs text-rose-300">{errors.password}</div> : null}
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-white/80">Confirm password</label>
-            <div className="relative">
-              <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/45">
-                <FontAwesomeIcon icon={faLock} />
-              </div>
-
-              <input
-                type={showPass2 ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Re-enter password"
-                autoComplete="new-password"
-                className={[
-                  "w-full rounded-2xl border bg-white/5 px-11 py-3 text-white outline-none transition",
-                  "placeholder:text-white/35",
-                  errors.confirmPassword
-                    ? "border-rose-400/60 ring-2 ring-rose-400/20"
-                    : "border-white/10 focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/15",
-                ].join(" ")}
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowPass2((s) => !s)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl px-3 py-2 text-white/60 hover:text-white transition"
-                aria-label="Toggle password confirm"
-                aria-pressed={showPass2}
-              >
-                <FontAwesomeIcon icon={showPass2 ? faEyeSlash : faEye} />
-              </button>
-            </div>
-            {errors.confirmPassword ? (
-              <div className="text-xs text-rose-300">{errors.confirmPassword}</div>
-            ) : null}
-          </div>
-        </div>
-
-        <motion.button
-          whileTap={{ scale: 0.98 }}
-          whileHover={{ y: -1 }}
-          type="submit"
-          disabled={!canSubmit}
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
           className={[
-            "mt-2 w-full rounded-2xl px-4 py-3 font-semibold transition",
-            "bg-gradient-to-r from-cyan-400 to-fuchsia-500 text-slate-950",
-            "shadow-[0_18px_50px_-25px_rgba(34,211,238,0.55)]",
-            !canSubmit ? "opacity-60 cursor-not-allowed" : "hover:brightness-110",
+            "w-full rounded-full bg-gray-100 py-3 pl-12 pr-4 text-sm outline-none transition",
+            error ? "ring-2 ring-red-300" : "focus:ring-2 focus:ring-purple-400",
           ].join(" ")}
-        >
-          {loading ? "Creating account..." : "Create account"}
-        </motion.button>
+        />
+      </div>
+      {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
+    </div>
+  );
+}
 
-        <div className="text-xs text-white/55">
-          By continuing, you agree to our Terms and acknowledge our Privacy Policy.
+/* Reusable Password */
+function PasswordField({
+  icon,
+  placeholder,
+  value,
+  onChange,
+  show,
+  setShow,
+  error,
+}: any) {
+  return (
+    <div>
+      <div className="relative">
+        <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+          <FontAwesomeIcon icon={icon} />
         </div>
-      </form>
-    </AuthShell>
+        <input
+          type={show ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={[
+            "w-full rounded-full bg-gray-100 py-3 pl-12 pr-10 text-sm outline-none transition",
+            error ? "ring-2 ring-red-300" : "focus:ring-2 focus:ring-purple-400",
+          ].join(" ")}
+        />
+        <button
+          type="button"
+          onClick={() => setShow((s: boolean) => !s)}
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+        >
+          <FontAwesomeIcon icon={show ? faEyeSlash : faEye} />
+        </button>
+      </div>
+      {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
+    </div>
   );
 }

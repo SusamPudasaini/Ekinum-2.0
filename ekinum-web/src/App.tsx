@@ -1,8 +1,8 @@
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import SignupPage from "./pages/auth/Signuppage";
+import SignupPage from "./pages/auth/SignupPage";
 import LoginPage from "./pages/auth/LoginPage";
-import VerifyEmailPage from "./pages/auth/VerifyEmailPage";
+// import VerifyEmailPage from "./pages/auth/VerifyEmailPage";
 
 function Home() {
   return (
@@ -32,7 +32,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/verify" element={<VerifyEmailPage />} />
+        {/* <Route path="/verify-email" element={<VerifyEmailPage />} /> */}
       </Routes>
     </>
   );

@@ -1,125 +1,197 @@
-import { motion, useMotionValue, useTransform } from "framer-motion";
-import { useEffect } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import type { IconProp } from "@fortawesome/fontawesome-svg-core"; // <–– import the correct type
-import { faGamepad, faShieldHalved, faBolt } from "@fortawesome/free-solid-svg-icons";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 export default function AuthShell({
+  page, // "login" | "signup"
   title,
   subtitle,
   children,
 }: {
+  page: "login" | "signup";
   title: string;
   subtitle: string;
   children: React.ReactNode;
 }) {
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-
-  const bgX = useTransform(mx, [0, 1], ["-20px", "20px"]);
-  const bgY = useTransform(my, [0, 1], ["-18px", "18px"]);
-
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      const x = e.clientX / window.innerWidth;
-      const y = e.clientY / window.innerHeight;
-      mx.set(x);
-      my.set(y);
-    };
-    window.addEventListener("mousemove", onMove);
-    return () => window.removeEventListener("mousemove", onMove);
-  }, [mx, my]);
-
   return (
-    <div className="min-h-screen overflow-hidden bg-slate-950 text-white">
-      {/* Parallax background */}
-      <motion.div
-        style={{ x: bgX, y: bgY }}
-        className="pointer-events-none absolute inset-0 opacity-90"
-      >
-        <div className="absolute -left-40 -top-40 h-[520px] w-[520px] rounded-full bg-fuchsia-500/20 blur-3xl" />
-        <div className="absolute -right-40 -bottom-40 h-[520px] w-[520px] rounded-full bg-cyan-400/20 blur-3xl" />
-        <div className="absolute left-1/2 top-1/2 h-[640px] w-[640px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-500/10 blur-3xl" />
-        {/* subtle grid */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_0)] [background-size:28px_28px] opacity-40" />
-      </motion.div>
+    <div className="min-h-screen bg-white text-slate-900">
+      {/* Top Nav */}
+      <header className="border-b border-slate-100">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+          <Link to="/" className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white font-semibold">
+              E
+            </div>
+            <span className="font-semibold tracking-tight">Ekinum</span>
+          </Link>
 
-      <div className="relative mx-auto flex min-h-screen max-w-6xl items-center justify-center px-4 py-10">
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: "easeOut" }}
-          className="w-full overflow-hidden rounded-[28px] border border-white/10 bg-white/5 shadow-[0_20px_80px_-35px_rgba(34,211,238,0.35)] backdrop-blur-xl"
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-2">
-            {/* Left: marketing */}
-            <div className="relative hidden lg:block p-10">
-              <div className="mb-8 flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/10">
-                  <FontAwesomeIcon icon={faGamepad as IconProp} className="text-xl text-cyan-200" />
-                </div>
-                <div>
-                  <div className="text-xl font-semibold tracking-tight">Ekinum</div>
-                  <div className="text-sm text-white/60">Topups • Gift Cards • Subscriptions</div>
-                </div>
-              </div>
+          <nav className="hidden items-center gap-7 text-sm text-slate-600 md:flex">
+            <a className="hover:text-slate-900" href="#">
+              Home
+            </a>
+            <a className="hover:text-slate-900" href="#">
+              Products
+            </a>
+            <a className="hover:text-slate-900" href="#">
+              How it works
+            </a>
+            <a className="hover:text-slate-900" href="#">
+              Contact
+            </a>
+          </nav>
 
-              <h1 className="text-3xl font-semibold leading-tight tracking-tight">
-                {title}
-              </h1>
-              <p className="mt-3 max-w-md text-white/70">
-                {subtitle}
-              </p>
+          <div className="flex items-center gap-2">
+            {page === "login" ? (
+              <Link
+                to="/signup"
+                className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Sign up
+              </Link>
+            ) : (
+              <Link
+                to="/login"
+                className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Log in
+              </Link>
+            )}
 
-              <div className="mt-10 grid gap-4">
-                <Feature
-                  icon={faShieldHalved as IconProp}
-                  title="Secure by design"
-                  desc="JWT auth + role-based access (Admin / Customer)."
-                />
-                <Feature
-                  icon={faBolt as IconProp}
-                  title="Fast checkout-ready"
-                  desc="Built for smooth topups & digital delivery flows."
-                />
-              </div>
+            <Link
+              to="/"
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+            >
+              Buy Now
+            </Link>
+          </div>
+        </div>
+      </header>
 
-              <div className="mt-10 rounded-2xl border border-white/10 bg-black/20 p-5">
-                <div className="text-sm text-white/70">
-                  Pro tip: keep your UI snappy — verify email once and you’re in.
-                </div>
-              </div>
+      {/* Hero */}
+      <main className="mx-auto max-w-6xl px-4">
+        <div className="grid items-center gap-10 py-12 lg:grid-cols-2 lg:py-16">
+          {/* Left */}
+          <div>
+            <motion.h1
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35 }}
+              className="max-w-xl text-4xl font-semibold leading-tight tracking-tight sm:text-5xl"
+            >
+              {title}
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.05 }}
+              className="mt-4 max-w-xl text-base leading-relaxed text-slate-600"
+            >
+              {subtitle}
+            </motion.p>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                to={page === "login" ? "/signup" : "/login"}
+                className="rounded-md bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+              >
+                {page === "login" ? "Create account" : "I already have an account"}
+              </Link>
+
+              <a
+                href="#why"
+                className="rounded-md border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                How it works
+              </a>
             </div>
 
-            {/* Right: form */}
-            <div className="p-6 sm:p-10">
-              {children}
+            {/* Logos row mimic */}
+            <div className="mt-10 border-t border-slate-100 pt-6">
+              <div className="flex flex-wrap items-center gap-x-10 gap-y-3 text-slate-300">
+                <span className="text-xs font-semibold tracking-widest">LOGOIPSUM</span>
+                <span className="text-xs font-semibold tracking-widest">LOGOIPSUM</span>
+                <span className="text-xs font-semibold tracking-widest">LOGOIPSUM</span>
+                <span className="text-xs font-semibold tracking-widest">LOGOIPSUM</span>
+              </div>
             </div>
           </div>
-        </motion.div>
-      </div>
+
+          {/* Right */}
+          <div className="relative">
+            {/* Illustration card */}
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-[0_18px_60px_-45px_rgba(15,23,42,0.35)]">
+              <div className="flex items-center gap-2 border-b border-slate-100 px-4 py-3">
+                <div className="h-2.5 w-2.5 rounded-full bg-slate-200" />
+                <div className="h-2.5 w-2.5 rounded-full bg-slate-200" />
+                <div className="h-2.5 w-2.5 rounded-full bg-slate-200" />
+                <div className="ml-2 text-xs font-medium text-slate-400">Secure Portal</div>
+              </div>
+
+              <div className="p-6 sm:p-8">
+                <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
+                  <div>
+                    <div className="text-sm font-semibold text-slate-900">Fast & secure</div>
+                    <div className="mt-1 text-sm text-slate-600">
+                      Verify email once, then manage purchases and digital codes instantly.
+                    </div>
+
+                    <ul className="mt-4 space-y-2 text-sm text-slate-600">
+                      <li className="flex gap-2">
+                        <span className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-600" />
+                        Role-based access (Admin / Customer)
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-600" />
+                        JWT token sessions
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-600" />
+                        Clean checkout-ready flow
+                      </li>
+                    </ul>
+                  </div>
+
+                  {/* Form slot */}
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 sm:p-6">
+                    {children}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* subtle decor */}
+            <div className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-blue-100 blur-2xl" />
+            <div className="pointer-events-none absolute -left-6 -bottom-6 h-20 w-20 rounded-full bg-slate-100 blur-2xl" />
+          </div>
+        </div>
+
+        {/* Why section mimic */}
+        <section id="why" className="border-t border-slate-100 py-12">
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold tracking-tight">
+              Why users choose Ekinum?
+            </h2>
+            <p className="mx-auto mt-2 max-w-2xl text-sm text-slate-600">
+              Simple onboarding, secure auth, and a clean experience designed for digital goods.
+            </p>
+          </div>
+
+          <div className="mt-8 grid gap-5 md:grid-cols-3">
+            <Card title="Email verification" desc="Prevents fake accounts and keeps orders secure." />
+            <Card title="Modern UI" desc="Clean, minimal, and optimized for conversion." />
+            <Card title="RBAC ready" desc="Separate admin tools and customer experience from day one." />
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
 
-function Feature({
-  icon,
-  title,
-  desc,
-}: {
-  icon: IconProp;    // <–– use IconProp here
-  title: string;
-  desc: string;
-}) {
+function Card({ title, desc }: { title: string; desc: string }) {
   return (
-    <div className="flex gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
-      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/10">
-        <FontAwesomeIcon icon={icon} className="text-lg text-white/80" />
-      </div>
-      <div>
-        <div className="font-medium">{title}</div>
-        <div className="text-sm text-white/60">{desc}</div>
-      </div>
+    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="text-sm font-semibold text-slate-900">{title}</div>
+      <div className="mt-2 text-sm text-slate-600">{desc}</div>
     </div>
   );
 }
