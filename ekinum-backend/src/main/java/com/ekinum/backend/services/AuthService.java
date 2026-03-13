@@ -114,4 +114,32 @@ public class AuthService {
                 user.getEmail()
         );
     }
+    
+    public void resendVerification(String rawEmail) {
+        if (rawEmail == null || rawEmail.trim().isEmpty()) {
+            throw new IllegalArgumentException("Email is required.");
+        }
+
+        String email = rawEmail.trim().toLowerCase();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("No account found with this email."));
+
+        if (user.isEmailVerified()) {
+            throw new IllegalArgumentException("This email is already verified. Please log in.");
+        }
+
+        String token = UUID.randomUUID().toString();
+        user.setVerificationToken(token);
+        user.setVerificationTokenExpiry(LocalDateTime.now().plusHours(expiryHours));
+
+        userRepository.save(user);
+
+        try {
+            mailService.sendVerificationEmail(user.getEmail(), user.getFullName(), token);
+        } catch (MailException ex) {
+            System.err.println("MAIL ERROR: " + ex.getMessage());
+            throw new IllegalArgumentException("Could not send verification email. Please try again later.");
+        }
+    }
 }

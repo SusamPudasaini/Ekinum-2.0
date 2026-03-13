@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import api from "../../api/axios";
 
@@ -13,6 +13,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import { ShieldCheck } from "lucide-react";
+import { useAuth } from "../../hooks/useAuth";
 
 function isEmail(s: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());
@@ -20,6 +21,8 @@ function isEmail(s: string) {
 
 export default function LoginPage() {
   const nav = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,7 +32,7 @@ export default function LoginPage() {
 
   const errors = useMemo(() => {
     const e: Record<string, string> = {};
-    if (!email.trim()) e.email = "Username is required.";
+    if (!email.trim()) e.email = "Email is required.";
     else if (!isEmail(email)) e.email = "Enter a valid email.";
     if (!password) e.password = "Password is required.";
     return e;
@@ -39,6 +42,7 @@ export default function LoginPage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+
     if (!canSubmit) {
       toast.error("Please fix the errors first.");
       return;
@@ -46,20 +50,26 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
+
       const res = await api.post("/api/auth/login", { email, password });
+      const data = res?.data;
 
-      const token = res?.data?.token;
-      const role = res?.data?.role;
-
-      if (!token) throw new Error("Missing token.");
-
-      if (remember) {
-        localStorage.setItem("token", token);
-        localStorage.setItem("me", JSON.stringify(res.data));
+      if (!data?.token) {
+        throw new Error("Missing token.");
       }
 
-      toast.success(`Welcome back! (${role})`);
-      nav("/", { replace: true });
+      login({
+        token: data.token,
+        role: data.role,
+        userId: data.userId,
+        fullName: data.fullName,
+        email: data.email,
+      });
+
+      toast.success(`Welcome back, ${data.fullName || "User"}!`);
+
+      const redirectTo = (location.state as any)?.from?.pathname || "/";
+      nav(redirectTo, { replace: true });
     } catch (err: any) {
       const msg =
         err?.response?.data?.message ||
@@ -72,95 +82,91 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 flex items-center justify-center px-4">
-      
-      {/* Decorative Circles */}
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 px-4">
       <div className="absolute right-20 top-20 h-10 w-10 rounded-full bg-yellow-400 opacity-90" />
       <div className="absolute right-32 top-52 h-6 w-6 rounded-full bg-purple-900" />
       <div className="absolute right-16 bottom-32 h-24 w-24 rounded-full bg-yellow-500 opacity-90" />
       <div className="absolute right-10 bottom-10 h-32 w-32 rounded-full bg-purple-900 opacity-90" />
 
-      {/* Login Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
         className="relative z-10 w-full max-w-md rounded-3xl bg-white p-10 shadow-[0_25px_70px_-20px_rgba(0,0,0,0.4)]"
       >
-        {/* Logo */}
         <div className="mb-6 flex justify-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-700 text-white shadow-md">
             <ShieldCheck size={22} />
           </div>
         </div>
 
-        {/* Title */}
         <h1 className="text-center text-3xl font-extrabold text-purple-900">
           Welcome Back
         </h1>
 
-        {/* Form */}
+        <p className="mt-2 text-center text-sm text-gray-500">
+          Login to continue to your account.
+        </p>
+
         <form onSubmit={onSubmit} className="mt-8 space-y-6">
-          
-          {/* Username */}
-          <div className="relative">
-            <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-              <FontAwesomeIcon icon={faUser} />
+          <div>
+            <div className="relative">
+              <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <FontAwesomeIcon icon={faUser} />
+              </div>
+
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email"
+                autoComplete="email"
+                className={[
+                  "w-full rounded-full bg-gray-100 py-3 pl-12 pr-4 text-sm outline-none transition",
+                  errors.email
+                    ? "ring-2 ring-red-300"
+                    : "focus:ring-2 focus:ring-purple-400",
+                ].join(" ")}
+              />
             </div>
-
-            <input
-              type="text"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Username"
-              autoComplete="email"
-              className={[
-                "w-full rounded-full bg-gray-100 py-3 pl-12 pr-4 text-sm outline-none transition",
-                errors.email
-                  ? "ring-2 ring-red-300"
-                  : "focus:ring-2 focus:ring-purple-400",
-              ].join(" ")}
-            />
-
             {errors.email && (
               <p className="mt-2 text-xs text-red-500">{errors.email}</p>
             )}
           </div>
 
-          {/* Password */}
-          <div className="relative">
-            <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-              <FontAwesomeIcon icon={faLock} />
+          <div>
+            <div className="relative">
+              <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <FontAwesomeIcon icon={faLock} />
+              </div>
+
+              <input
+                type={showPass ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                autoComplete="current-password"
+                className={[
+                  "w-full rounded-full bg-gray-100 py-3 pl-12 pr-10 text-sm outline-none transition",
+                  errors.password
+                    ? "ring-2 ring-red-300"
+                    : "focus:ring-2 focus:ring-purple-400",
+                ].join(" ")}
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPass((s) => !s)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <FontAwesomeIcon icon={showPass ? faEyeSlash : faEye} />
+              </button>
             </div>
-
-            <input
-              type={showPass ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              autoComplete="current-password"
-              className={[
-                "w-full rounded-full bg-gray-100 py-3 pl-12 pr-10 text-sm outline-none transition",
-                errors.password
-                  ? "ring-2 ring-red-300"
-                  : "focus:ring-2 focus:ring-purple-400",
-              ].join(" ")}
-            />
-
-            <button
-              type="button"
-              onClick={() => setShowPass((s) => !s)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              <FontAwesomeIcon icon={showPass ? faEyeSlash : faEye} />
-            </button>
-
             {errors.password && (
               <p className="mt-2 text-xs text-red-500">{errors.password}</p>
             )}
           </div>
 
-          {/* Remember / Forgot */}
           <div className="flex items-center justify-between text-sm">
             <label className="flex items-center gap-2 text-gray-600">
               <input
@@ -173,14 +179,13 @@ export default function LoginPage() {
             </label>
 
             <Link
-              to="/forgot-password"
+              to="/signup"
               className="font-medium text-purple-700 hover:underline"
             >
-              Forgot Password
+              Create account
             </Link>
           </div>
 
-          {/* Submit */}
           <motion.button
             whileTap={{ scale: 0.98 }}
             type="submit"
@@ -189,17 +194,6 @@ export default function LoginPage() {
           >
             {loading ? "Signing in..." : "Login"}
           </motion.button>
-
-          {/* Signup */}
-          <p className="text-center text-sm text-gray-600">
-            Don’t Have an Account?{" "}
-            <Link
-              to="/signup"
-              className="font-semibold text-purple-800 hover:underline"
-            >
-              Sign Up
-            </Link>
-          </p>
         </form>
       </motion.div>
     </div>

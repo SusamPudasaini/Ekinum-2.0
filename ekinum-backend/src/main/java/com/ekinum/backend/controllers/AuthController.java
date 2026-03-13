@@ -32,6 +32,16 @@ public class AuthController {
         ));
     }
 
+    @PostMapping("/resend-verification")
+    public ResponseEntity<ApiMessageResponse> resendVerification(
+            @Valid @RequestBody ResendVerificationRequest request
+    ) {
+        authService.resendVerification(request.getEmail());
+        return ResponseEntity.ok(new ApiMessageResponse(
+                "Verification email sent successfully. Please check your inbox."
+        ));
+    }
+
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
