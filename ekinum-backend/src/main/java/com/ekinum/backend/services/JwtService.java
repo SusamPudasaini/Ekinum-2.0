@@ -21,8 +21,7 @@ public class JwtService {
             @Value("${app.jwt.secret}") String secret,
             @Value("${app.jwt.expiry-ms:86400000}") long expiryMs
     ) {
-        // secret must be at least 32 chars for HS256
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         this.expiryMs = expiryMs;
     }
 
